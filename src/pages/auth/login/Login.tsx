@@ -1,5 +1,11 @@
 import React, { useEffect, useState } from "react";
-import { useForm, SubmitHandler, UseFormRegister, FieldErrors, UseFormHandleSubmit } from "react-hook-form";
+import {
+  useForm,
+  SubmitHandler,
+  UseFormRegister,
+  FieldErrors,
+  UseFormHandleSubmit,
+} from "react-hook-form";
 import confetti from "canvas-confetti";
 import { Typography, TextField, useMediaQuery, useTheme } from "@mui/material";
 import { RequestDiagnosis } from "../../../interfaces/auth/auth.interface";
@@ -9,39 +15,48 @@ import DialogMedical from "../../../common/Dialog/Dialog";
 
 interface LoopingVideoProps {
   muted: boolean;
+  showReflections: boolean;
 }
 
-const LoopingVideo: React.FC<LoopingVideoProps> = ({ muted }) => (
-  <div className="flex w-full h-full bg-black relative overflow-hidden">
+const LoopingVideo: React.FC<LoopingVideoProps> = ({ muted, showReflections }) => (
+  <div className="relative w-full h-full overflow-hidden bg-black">
     {/* Left reflection */}
-    <video
-      src="/video3.mp4"
-      autoPlay
-      loop
-      muted
-      playsInline
-      className="w-1/4 h-full object-cover transform -scale-x-100 opacity-30 blur-sm"
-    />
+    {showReflections && (
+      <video
+        src="/video3.mp4"
+        autoPlay
+        loop
+        muted
+        playsInline
+        className="absolute inset-y-0 left-0 w-1/4 h-full object-cover transform -scale-x-100 opacity-30 blur-sm"
+      />
+    )}
 
-    {/* Main video */}
+    {/* Central video: object-contain + object-top to avoid cropping */}
     <video
       src="/video2.mp4"
       autoPlay
       loop
       muted={muted}
       playsInline
-      className="w-1/2 h-full object-contain"
+      className={
+        showReflections
+          ? "absolute inset-y-0 left-1/4 w-1/2 h-full object-contain object-top"
+          : "absolute inset-0 w-full h-full object-contain object-top"
+      }
     />
 
     {/* Right reflection */}
-    <video
-      src="/video3.mp4"
-      autoPlay
-      loop
-      muted
-      playsInline
-      className="w-1/4 h-full object-cover opacity-30 blur-sm"
-    />
+    {showReflections && (
+      <video
+        src="/video3.mp4"
+        autoPlay
+        loop
+        muted
+        playsInline
+        className="absolute inset-y-0 right-0 w-1/4 h-full object-cover opacity-30 blur-sm"
+      />
+    )}
   </div>
 );
 
@@ -139,73 +154,68 @@ const LoginView: React.FC = () => {
   };
 
   const unmute = () => setIsMuted(false);
-  const handleButton = () => {
+  const openForm = () => {
     unmute();
     setFormOpen(true);
   };
 
-  // Video height: full screen normally, or 45vh after opening form on mobile
-  const videoHeightClass = isDesktop
-    ? "h-screen"
-    : formOpen
-    ? "h-[45vh]"
-    : "h-screen";
+  // showReflections in desktop or after opening form on mobile
+  const showReflections = isDesktop || formOpen;
 
   return (
-    <div className="flex flex-col lg:flex-row w-full h-screen overflow-x-hidden">
-      {/* VIDEO + REFLECTIONS */}
-      <div className={`w-full lg:w-3/5 relative ${videoHeightClass}`}>
-        <LoopingVideo muted={isMuted} />
-      </div>
-
-      {/* DESKTOP: fixed form at right */}
-      {isDesktop && (
-        <div className="w-full lg:w-2/5 h-screen bg-white flex items-center justify-center px-8">
-          <FormContents
-            isLoading={isLoading}
-            dialogOpen={dialogOpen}
-            data={data}
-            setDialogOpen={setDialogOpen}
-            register={register}
-            errors={errors}
-            handleSubmit={handleSubmit}
-            onSubmit={onSubmit}
-          />
+    <div className="relative w-full h-screen overflow-hidden bg-white">
+      {isDesktop ? (
+        <div className="flex w-full h-full">
+          <div className="relative w-3/5 h-full">
+            <LoopingVideo muted={isMuted} showReflections={true} />
+          </div>
+          <div className="w-2/5 h-full bg-white flex items-center justify-center px-8">
+            <FormContents
+              isLoading={isLoading}
+              dialogOpen={dialogOpen}
+              data={data}
+              setDialogOpen={setDialogOpen}
+              register={register}
+              errors={errors}
+              handleSubmit={handleSubmit}
+              onSubmit={onSubmit}
+            />
+          </div>
         </div>
-      )}
+      ) : (
+        <>
+          {!formOpen && (
+            <div className="relative w-full h-screen">
+              <LoopingVideo muted={isMuted} showReflections={false} />
+              <button
+                onClick={openForm}
+                className="absolute top-4 right-4 z-20 bg-white/90 text-black px-4 py-2 rounded-full shadow"
+              >
+                Me interesa 🔥
+              </button>
+            </div>
+          )}
 
-      {/* MOBILE: trigger button */}
-      {!isDesktop && !formOpen && (
-        <button
-          onClick={handleButton}
-          className="absolute top-4 right-4 z-20 bg-white/90 text-black px-4 py-2 rounded-full shadow"
-        >
-          Me interesa 🔥
-        </button>
-      )}
-
-      {/* MOBILE: sliding form */}
-      {!isDesktop && (
-        <div
-          className={`
-            absolute inset-x-0 bottom-0 bg-white px-4 sm:px-6 md:px-8
-            h-[55vh]
-            transform ${formOpen ? "translate-y-0" : "translate-y-full"}
-            transition-transform duration-500 ease-out
-            flex items-center justify-center
-          `}
-        >
-          <FormContents
-            isLoading={isLoading}
-            dialogOpen={dialogOpen}
-            data={data}
-            setDialogOpen={setDialogOpen}
-            register={register}
-            errors={errors}
-            handleSubmit={handleSubmit}
-            onSubmit={onSubmit}
-          />
-        </div>
+          {formOpen && (
+            <>
+              <div className="absolute inset-0 w-full h-screen">
+                <LoopingVideo muted={isMuted} showReflections={showReflections} />
+              </div>
+              <div className="absolute inset-x-0 bottom-0 bg-white px-4 sm:px-6 md:px-8 h-[55vh] flex items-center justify-center transition-transform duration-500 ease-out">
+                <FormContents
+                  isLoading={isLoading}
+                  dialogOpen={dialogOpen}
+                  data={data}
+                  setDialogOpen={setDialogOpen}
+                  register={register}
+                  errors={errors}
+                  handleSubmit={handleSubmit}
+                  onSubmit={onSubmit}
+                />
+              </div>
+            </>
+          )}
+        </>
       )}
     </div>
   );
