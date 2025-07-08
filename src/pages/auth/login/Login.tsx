@@ -14,6 +14,7 @@ import ButtonUI from "../../../common/Button/ButtonUI";
 import DialogMedical from "../../../common/Dialog/Dialog";
 import { useNotification } from "../../../hooks/useNotification";
 import { useRegistrationStore } from "../../../store";
+import { request } from "../../../interfaces/user/user.interface";
 
 interface LoopingVideoProps {
   muted: boolean;
@@ -157,7 +158,12 @@ const LoginView: React.FC = () => {
   }, [isSuccess, data, setRegistered, getSuccess]);
 
   const onSubmit: SubmitHandler<RequestDiagnosis> = (formData) => {
-    mutate(formData);
+    const data: request = {
+      email: formData.email,
+      name: formData.name,
+      confirm_attendance: false
+    }
+    mutate(data);
   }
 
   const openForm = () => {
