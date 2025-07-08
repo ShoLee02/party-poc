@@ -21,7 +21,7 @@ const LoopingVideo: React.FC<LoopingVideoProps> = ({ muted, showReflections }) =
         loop
         muted
         playsInline
-        className="absolute top-0 left-0 h-full w-1/4 object-cover transform -scale-x-100 opacity-30 blur-sm"
+        className="hidden lg:block absolute top-0 left-0 h-full w-1/4 object-cover transform -scale-x-100 opacity-30 blur-sm"
       />
     )}
     <video
@@ -41,7 +41,7 @@ const LoopingVideo: React.FC<LoopingVideoProps> = ({ muted, showReflections }) =
         loop
         muted
         playsInline
-        className="absolute top-0 right-0 h-full w-1/4 object-cover opacity-30 blur-sm"
+        className="hidden lg:block absolute top-0 right-0 h-full w-1/4 object-cover opacity-30 blur-sm"
       />
     )}
   </div>
@@ -85,41 +85,46 @@ const LoginView: React.FC = () => {
 
   const showReflections = isDesktop || showFormMobile;
 
-  // Video wrapper:
-  // - Desktop: 60% width, full height
-  // - Mobile before click: full screen
-  // - Mobile after click: fixed 45vh so form has 55vh below
+  // Video wrapper heights
   const videoWrapper = isDesktop
     ? "w-full lg:w-[60%] h-screen"
     : showFormMobile
       ? "w-full h-[45vh]"
       : "w-full h-screen";
 
-  // Form wrapper:
-  // - Desktop: 40% width, full height, centered
-  // - Mobile: slides in from bottom, fixed 55vh height, scrollable
+  // Form wrapper heights and scroll
   const formWrapper = isDesktop
     ? "w-full lg:w-[40%] h-screen flex items-center justify-center bg-white px-8"
-    : `absolute inset-x-0 bottom-0 bg-white px-4 py-6
-       h-[55vh]
+    : `absolute inset-x-0 bottom-0 bg-white px-4 sm:px-6 md:px-8
+       h-[55vh] sm:h-[60vh] md:h-[65vh]
        transform ${showFormMobile ? "translate-y-0" : "translate-y-full"}
        transition-transform duration-500 ease-out
        overflow-auto
        flex items-start justify-center`;
 
+  // Form content with responsive widths, gaps, and typography
   const FormContent = (
-    <div className="w-full max-w-md flex flex-col items-center gap-4">
-      <Typography variant="h5" sx={{ fontWeight: 700, color: "#111" }}>
+    <div className="w-full max-w-full sm:max-w-xs md:max-w-md flex flex-col items-center gap-2 sm:gap-3 md:gap-4">
+      <Typography
+        variant="h6"
+        sx={{
+          fontWeight: 700,
+          color: "#111",
+          textAlign: "center",
+          fontSize: { xs: "1.25rem", sm: "1.5rem", md: "1.75rem" },
+        }}
+      >
         Regístrate aquí
       </Typography>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="w-full flex flex-col gap-4">
+      <form onSubmit={handleSubmit(onSubmit)} className="w-full flex flex-col gap-2 sm:gap-3 md:gap-4">
         <TextField
           fullWidth
           label="Nombre"
           {...register("name", { required: "Este campo es requerido" })}
           error={!!errors.name}
           helperText={errors.name?.message}
+          sx={{ "& .MuiInputBase-input": { fontSize: { xs: "0.875rem", sm: "1rem" } } }}
         />
 
         <TextField
@@ -129,12 +134,13 @@ const LoginView: React.FC = () => {
           {...register("email", { required: "Este campo es requerido" })}
           error={!!errors.email}
           helperText={errors.email?.message}
+          sx={{ "& .MuiInputBase-input": { fontSize: { xs: "0.875rem", sm: "1rem" } } }}
         />
 
         <ButtonUI
           text="ACEPTO 🤑"
           isLoading={isLoading}
-          className="w-full"
+          className="w-full py-2 text-sm sm:py-3 sm:text-base md:py-4 md:text-lg"
           onClick={handleSubmit(onSubmit)}
         />
       </form>
@@ -150,7 +156,7 @@ const LoginView: React.FC = () => {
       onClick={isDesktop ? unmute : undefined}
       className="relative flex flex-col lg:flex-row w-full h-screen bg-white"
     >
-      {/* Botón móvil */}
+      {/* Mobile trigger button */}
       {!isDesktop && !showFormMobile && (
         <button
           onClick={handleRegisterClick}
@@ -160,12 +166,12 @@ const LoginView: React.FC = () => {
         </button>
       )}
 
-      {/* Video + Reflejos */}
+      {/* Video section */}
       <div className={videoWrapper}>
         <LoopingVideo muted={isMuted} showReflections={showReflections} />
       </div>
 
-      {/* Formulario */}
+      {/* Form section */}
       <div className={formWrapper}>{FormContent}</div>
     </div>
   );
