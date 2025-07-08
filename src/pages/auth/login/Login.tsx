@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
+import confetti from "canvas-confetti";
 import { Typography, TextField, useMediaQuery, useTheme } from "@mui/material";
 import { RequestDiagnosis } from "../../../interfaces/auth/auth.interface";
 import { useLogin } from "../../../queries/useAuth";
 import ButtonUI from "../../../common/Button/ButtonUI";
 import DialogMedical from "../../../common/Dialog/Dialog";
-import confetti from 'canvas-confetti';
 
 interface LoopingVideoProps {
   muted: boolean;
@@ -14,7 +14,6 @@ interface LoopingVideoProps {
 
 const LoopingVideo: React.FC<LoopingVideoProps> = ({ muted, showReflections }) => (
   <div className="relative w-full h-full overflow-hidden bg-black shadow-lg">
-    {/* Reflejo izquierdo */}
     {showReflections && (
       <video
         src="/video3.mp4"
@@ -25,8 +24,6 @@ const LoopingVideo: React.FC<LoopingVideoProps> = ({ muted, showReflections }) =
         className="absolute top-0 left-0 h-full w-1/4 object-cover transform -scale-x-100 opacity-30 blur-sm"
       />
     )}
-
-    {/* Video central */}
     <video
       src="/video2.mp4"
       autoPlay
@@ -37,8 +34,6 @@ const LoopingVideo: React.FC<LoopingVideoProps> = ({ muted, showReflections }) =
         showReflections ? "w-3/5" : "w-full"
       }`}
     />
-
-    {/* Reflejo derecho */}
     {showReflections && (
       <video
         src="/video3.mp4"
@@ -55,11 +50,10 @@ const LoopingVideo: React.FC<LoopingVideoProps> = ({ muted, showReflections }) =
 const LoginView: React.FC = () => {
   const theme = useTheme();
   const isDesktop = useMediaQuery(theme.breakpoints.up("lg"));
-
   const [showFormMobile, setShowFormMobile] = useState(false);
   const [isMuted, setIsMuted] = useState(true);
 
-  const { isLoading, data, isSuccess } = useLogin(); // mutate
+  const { isLoading, mutate, data, isSuccess } = useLogin();
   const {
     register,
     handleSubmit,
@@ -73,21 +67,14 @@ const LoginView: React.FC = () => {
     if (isSuccess) setOpenDialog(true);
   }, [isSuccess]);
 
-  const onSubmit = (formData: RequestDiagnosis) => {
-    console.log(formData);
-    launchConfetti();
-    //mutate(formData);
+  const launchConfetti = () => {
+    confetti({ particleCount: 100, spread: 160, startVelocity: 30, colors: ["#FF5733", "#33FFA8", "#3360FF", "#FF33EA"] });
   };
 
-  const launchConfetti = () => {
-    const confettiSettings = {
-      particleCount: 100,
-      spread: 160,
-      startVelocity: 30,
-      colors: ['#FF5733', '#33FFA8', '#3360FF', '#FF33EA'],
-    };
-    confetti(confettiSettings);
-  }
+  const onSubmit = (formData: RequestDiagnosis) => {
+    mutate(formData);
+    launchConfetti();
+  };
 
   const unmute = () => setIsMuted(false);
   const handleRegisterClick = () => {
@@ -95,17 +82,15 @@ const LoginView: React.FC = () => {
     setShowFormMobile(true);
   };
 
-  // ¿Mostramos reflejos? Solo en desktop o tras pulsar en móvil
+  // show reflections on desktop or once user clicks in mobile
   const showReflections = isDesktop || showFormMobile;
 
-  // Wrapper del video
+  // Video wrapper: always full height
   const videoWrapper = isDesktop
     ? "w-full lg:w-[60%] h-screen"
-    : showFormMobile
-    ? "w-full h-[60vh]"
     : "w-full h-screen";
 
-  // Wrapper del formulario
+  // Form wrapper
   const formWrapper = isDesktop
     ? "w-full lg:w-[40%] h-screen flex items-center justify-center bg-white px-8"
     : `absolute inset-x-0 bottom-0 bg-white px-4 py-6
@@ -154,9 +139,9 @@ const LoginView: React.FC = () => {
   return (
     <div
       onClick={isDesktop ? unmute : undefined}
-      className="relative flex flex-col lg:flex-row w-full h-screen overflow-hidden"
+      className="relative flex flex-col lg:flex-row w-full h-screen bg-white"
     >
-      {/* Botón móvil */}
+      {/* Mobile trigger button */}
       {!isDesktop && !showFormMobile && (
         <button
           onClick={handleRegisterClick}
@@ -166,12 +151,12 @@ const LoginView: React.FC = () => {
         </button>
       )}
 
-      {/* Video + reflejos */}
+      {/* Video Section */}
       <div className={videoWrapper}>
         <LoopingVideo muted={isMuted} showReflections={showReflections} />
       </div>
 
-      {/* Formulario */}
+      {/* Form Section */}
       <div className={formWrapper}>{FormContent}</div>
     </div>
   );
