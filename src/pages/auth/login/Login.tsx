@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, SubmitHandler, UseFormRegister, FieldErrors, UseFormHandleSubmit } from "react-hook-form";
 import confetti from "canvas-confetti";
 import { Typography, TextField, useMediaQuery, useTheme } from "@mui/material";
 import { RequestDiagnosis } from "../../../interfaces/auth/auth.interface";
@@ -9,167 +9,206 @@ import DialogMedical from "../../../common/Dialog/Dialog";
 
 interface LoopingVideoProps {
   muted: boolean;
-  showReflections: boolean;
 }
 
-const LoopingVideo: React.FC<LoopingVideoProps> = ({ muted, showReflections }) => (
-  <div className="absolute inset-0 w-full h-full overflow-hidden bg-black shadow-lg">
-    {/* reflejo izquierdo */}
-    {showReflections && (
-      <video
-        src="/video3.mp4"
-        autoPlay
-        loop
-        muted
-        playsInline
-        className="hidden lg:block absolute top-0 left-0 h-full w-1/4 object-cover transform -scale-x-100 opacity-30 blur-sm"
-      />
-    )}
-    {/* video central siempre cubre todo */}
+const LoopingVideo: React.FC<LoopingVideoProps> = ({ muted }) => (
+  <div className="flex w-full h-full bg-black relative overflow-hidden">
+    {/* Left reflection */}
+    <video
+      src="/video3.mp4"
+      autoPlay
+      loop
+      muted
+      playsInline
+      className="w-1/4 h-full object-cover transform -scale-x-100 opacity-30 blur-sm"
+    />
+
+    {/* Main video */}
     <video
       src="/video2.mp4"
       autoPlay
       loop
       muted={muted}
       playsInline
-      className="absolute inset-0 w-full h-full object-cover"
+      className="w-1/2 h-full object-contain"
     />
-    {/* reflejo derecho */}
-    {showReflections && (
-      <video
-        src="/video3.mp4"
-        autoPlay
-        loop
-        muted
-        playsInline
-        className="hidden lg:block absolute top-0 right-0 h-full w-1/4 object-cover opacity-30 blur-sm"
+
+    {/* Right reflection */}
+    <video
+      src="/video3.mp4"
+      autoPlay
+      loop
+      muted
+      playsInline
+      className="w-1/4 h-full object-cover opacity-30 blur-sm"
+    />
+  </div>
+);
+
+type FormContentsProps = {
+  isLoading: boolean;
+  dialogOpen: boolean;
+  data: any;
+  setDialogOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  register: UseFormRegister<RequestDiagnosis>;
+  errors: FieldErrors<RequestDiagnosis>;
+  handleSubmit: UseFormHandleSubmit<RequestDiagnosis>;
+  onSubmit: SubmitHandler<RequestDiagnosis>;
+};
+
+const FormContents: React.FC<FormContentsProps> = ({
+  isLoading,
+  dialogOpen,
+  data,
+  setDialogOpen,
+  register,
+  errors,
+  handleSubmit,
+  onSubmit,
+}) => (
+  <div className="w-full max-w-full sm:max-w-xs md:max-w-md flex flex-col items-center gap-4">
+    <Typography
+      variant="h5"
+      sx={{
+        fontWeight: 700,
+        color: "#111",
+        textAlign: "center",
+        fontSize: { xs: "1.25rem", sm: "1.5rem", md: "1.75rem" },
+      }}
+    >
+      Regístrate aquí
+    </Typography>
+
+    <form onSubmit={handleSubmit(onSubmit)} className="w-full flex flex-col gap-3">
+      <TextField
+        fullWidth
+        label="Nombre"
+        {...register("name", { required: "Este campo es requerido" })}
+        error={!!errors.name}
+        helperText={errors.name?.message}
+        sx={{ "& .MuiInputBase-input": { fontSize: { xs: "0.875rem", sm: "1rem" } } }}
       />
-    )}
+
+      <TextField
+        fullWidth
+        type="email"
+        label="Correo"
+        {...register("email", { required: "Este campo es requerido" })}
+        error={!!errors.email}
+        helperText={errors.email?.message}
+        sx={{ "& .MuiInputBase-input": { fontSize: { xs: "0.875rem", sm: "1rem" } } }}
+      />
+
+      <ButtonUI
+        text="ACEPTO 🤑"
+        isLoading={isLoading}
+        className="w-full py-2 text-sm sm:py-3 sm:text-base md:py-4 md:text-lg"
+      />
+    </form>
+
+    {dialogOpen && <DialogMedical open onClose={() => setDialogOpen(false)} data={data} />}
   </div>
 );
 
 const LoginView: React.FC = () => {
   const theme = useTheme();
   const isDesktop = useMediaQuery(theme.breakpoints.up("lg"));
-  const [showFormMobile, setShowFormMobile] = useState(false);
+  const [formOpen, setFormOpen] = useState(false);
   const [isMuted, setIsMuted] = useState(true);
 
   const { isLoading, mutate, data, isSuccess } = useLogin();
-  const { register, handleSubmit, formState: { errors } } = useForm<RequestDiagnosis>({
-    defaultValues: { name: "", email: "" },
-  });
-  const [openDialog, setOpenDialog] = useState(false);
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<RequestDiagnosis>({ defaultValues: { name: "", email: "" } });
+  const [dialogOpen, setDialogOpen] = useState(false);
 
   useEffect(() => {
-    if (isSuccess) setOpenDialog(true);
+    if (isSuccess) setDialogOpen(true);
   }, [isSuccess]);
 
-  const launchConfetti = () => {
-    confetti({ particleCount: 100, spread: 160, startVelocity: 30, colors: ["#FF5733", "#33FFA8", "#3360FF", "#FF33EA"] });
-  };
-
-  const onSubmit = (formData: RequestDiagnosis) => {
+  const onSubmit: SubmitHandler<RequestDiagnosis> = (formData) => {
     mutate(formData);
-    launchConfetti();
+    confetti({
+      particleCount: 100,
+      spread: 160,
+      startVelocity: 30,
+      colors: ["#f72585", "#7209b7"],
+    });
   };
 
   const unmute = () => setIsMuted(false);
-  const handleRegisterClick = () => {
+  const handleButton = () => {
     unmute();
-    setShowFormMobile(true);
+    setFormOpen(true);
   };
 
-  // Mostrar reflejos si desktop o tras pulsar en móvil
-  const showReflections = isDesktop || showFormMobile;
+  // Video height: full screen normally, or 45vh after opening form on mobile
+  const videoHeightClass = isDesktop
+    ? "h-screen"
+    : formOpen
+    ? "h-[45vh]"
+    : "h-screen";
 
   return (
-    <div className="relative w-full h-screen overflow-hidden overflow-x-hidden">
-      {/* VIDEO DE FONDO */}
-      <LoopingVideo muted={isMuted} showReflections={showReflections} />
+    <div className="flex flex-col lg:flex-row w-full h-screen overflow-x-hidden">
+      {/* VIDEO + REFLECTIONS */}
+      <div className={`w-full lg:w-3/5 relative ${videoHeightClass}`}>
+        <LoopingVideo muted={isMuted} />
+      </div>
 
-      {/* DESKTOP: formulario a la derecha */}
+      {/* DESKTOP: fixed form at right */}
       {isDesktop && (
-        <div className="absolute inset-y-0 right-0 w-2/5 bg-white flex items-center justify-center px-8">
-          <FormContents />
+        <div className="w-full lg:w-2/5 h-screen bg-white flex items-center justify-center px-8">
+          <FormContents
+            isLoading={isLoading}
+            dialogOpen={dialogOpen}
+            data={data}
+            setDialogOpen={setDialogOpen}
+            register={register}
+            errors={errors}
+            handleSubmit={handleSubmit}
+            onSubmit={onSubmit}
+          />
         </div>
       )}
 
-      {/* MÓVIL: botón disparador */}
-      {!isDesktop && !showFormMobile && (
+      {/* MOBILE: trigger button */}
+      {!isDesktop && !formOpen && (
         <button
-          onClick={handleRegisterClick}
+          onClick={handleButton}
           className="absolute top-4 right-4 z-20 bg-white/90 text-black px-4 py-2 rounded-full shadow"
         >
           Me interesa 🔥
         </button>
       )}
 
-      {/* MÓVIL: formulario deslizable */}
+      {/* MOBILE: sliding form */}
       {!isDesktop && (
         <div
           className={`
             absolute inset-x-0 bottom-0 bg-white px-4 sm:px-6 md:px-8
             h-[55vh]
-            transform ${showFormMobile ? "translate-y-0" : "translate-y-full"}
+            transform ${formOpen ? "translate-y-0" : "translate-y-full"}
             transition-transform duration-500 ease-out
-            flex flex-col items-center justify-center
+            flex items-center justify-center
           `}
         >
-          <FormContents />
+          <FormContents
+            isLoading={isLoading}
+            dialogOpen={dialogOpen}
+            data={data}
+            setDialogOpen={setDialogOpen}
+            register={register}
+            errors={errors}
+            handleSubmit={handleSubmit}
+            onSubmit={onSubmit}
+          />
         </div>
       )}
     </div>
   );
-
-  function FormContents() {
-    return (
-      <div className="w-full max-w-full sm:max-w-xs md:max-w-md flex flex-col items-center gap-4">
-        <Typography
-          variant="h5"
-          sx={{
-            fontWeight: 700,
-            color: "#111",
-            textAlign: "center",
-            fontSize: { xs: "1.25rem", sm: "1.5rem", md: "1.75rem" },
-          }}
-        >
-          Regístrate aquí
-        </Typography>
-
-        <form onSubmit={handleSubmit(onSubmit)} className="w-full flex flex-col gap-3">
-          <TextField
-            fullWidth
-            label="Nombre"
-            {...register("name", { required: "Este campo es requerido" })}
-            error={!!errors.name}
-            helperText={errors.name?.message}
-            sx={{ "& .MuiInputBase-input": { fontSize: { xs: "0.875rem", sm: "1rem" } } }}
-          />
-
-          <TextField
-            fullWidth
-            type="email"
-            label="Correo"
-            {...register("email", { required: "Este campo es requerido" })}
-            error={!!errors.email}
-            helperText={errors.email?.message}
-            sx={{ "& .MuiInputBase-input": { fontSize: { xs: "0.875rem", sm: "1rem" } } }}
-          />
-
-          <ButtonUI
-            text="ACEPTO 🤑"
-            isLoading={isLoading}
-            className="w-full py-2 text-sm sm:py-3 sm:text-base md:py-4 md:text-lg"
-            onClick={handleSubmit(onSubmit)}
-          />
-        </form>
-
-        {isSuccess && (
-          <DialogMedical open={openDialog} onClose={() => setOpenDialog(false)} data={data} />
-        )}
-      </div>
-    );
-  }
 };
 
 export default LoginView;
