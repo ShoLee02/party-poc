@@ -85,28 +85,26 @@ const LoginView: React.FC = () => {
 
   const showReflections = isDesktop || showFormMobile;
 
-  // Video wrapper heights
+  // Video wrapper: desktop 100vh, móvil 45vh tras clic
   const videoWrapper = isDesktop
     ? "w-full lg:w-[60%] h-screen"
     : showFormMobile
       ? "w-full h-[45vh]"
       : "w-full h-screen";
 
-  // Form wrapper heights and scroll
+  // Form wrapper: desktop 100vh, móvil ocupa 55vh y se centra
   const formWrapper = isDesktop
     ? "w-full lg:w-[40%] h-screen flex items-center justify-center bg-white px-8"
     : `absolute inset-x-0 bottom-0 bg-white px-4 sm:px-6 md:px-8
        h-[55vh] sm:h-[60vh] md:h-[65vh]
        transform ${showFormMobile ? "translate-y-0" : "translate-y-full"}
        transition-transform duration-500 ease-out
-       overflow-auto
-       flex items-start justify-center`;
+       flex items-center justify-center`;
 
-  // Form content with responsive widths, gaps, and typography
   const FormContent = (
-    <div className="w-full max-w-full sm:max-w-xs md:max-w-md flex flex-col items-center gap-2 sm:gap-3 md:gap-4">
+    <div className="w-full max-w-full sm:max-w-xs md:max-w-md flex flex-col items-center gap-4">
       <Typography
-        variant="h6"
+        variant="h5"
         sx={{
           fontWeight: 700,
           color: "#111",
@@ -117,7 +115,7 @@ const LoginView: React.FC = () => {
         Regístrate aquí
       </Typography>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="w-full flex flex-col gap-2 sm:gap-3 md:gap-4">
+      <form onSubmit={handleSubmit(onSubmit)} className="w-full flex flex-col gap-3">
         <TextField
           fullWidth
           label="Nombre"
@@ -156,7 +154,7 @@ const LoginView: React.FC = () => {
       onClick={isDesktop ? unmute : undefined}
       className="relative flex flex-col lg:flex-row w-full h-screen bg-white"
     >
-      {/* Mobile trigger button */}
+      {/* Botón móvil */}
       {!isDesktop && !showFormMobile && (
         <button
           onClick={handleRegisterClick}
@@ -166,12 +164,12 @@ const LoginView: React.FC = () => {
         </button>
       )}
 
-      {/* Video section */}
+      {/* Sección de video */}
       <div className={videoWrapper}>
         <LoopingVideo muted={isMuted} showReflections={showReflections} />
       </div>
 
-      {/* Form section */}
+      {/* Sección de formulario */}
       <div className={formWrapper}>{FormContent}</div>
     </div>
   );
