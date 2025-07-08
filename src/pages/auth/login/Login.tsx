@@ -12,6 +12,8 @@ import { RequestDiagnosis } from "../../../interfaces/auth/auth.interface";
 import { useLogin } from "../../../queries/useAuth";
 import ButtonUI from "../../../common/Button/ButtonUI";
 import DialogMedical from "../../../common/Dialog/Dialog";
+import { useNotification } from "../../../hooks/useNotification";
+import { useRegistrationStore } from "../../../store";
 
 interface LoopingVideoProps {
   muted: boolean;
@@ -19,50 +21,47 @@ interface LoopingVideoProps {
   videoKey: number;
 }
 
-const LoopingVideo: React.FC<LoopingVideoProps> = ({ muted, showReflections, videoKey }) => (
-  <div className="relative w-full h-full overflow-hidden bg-black">
-    {/* Left reflection */}
-    {showReflections && (
-      <video
-        src="/video3.mp4"
-        autoPlay
-        key={videoKey}
-        loop
-        muted
-        playsInline
-        className="absolute inset-y-0 left-0 w-1/4 h-full object-cover transform -scale-x-100 opacity-30 blur-sm"
-      />
-    )}
+const LoopingVideo: React.FC<LoopingVideoProps> = ({ muted, showReflections, videoKey }) => {
+  const centerClass = showReflections
+    ? "absolute inset-y-0 left-1/4 w-1/2 h-full object-contain object-center"
+    : "absolute inset-0 w-full h-full object-contain object-center";
 
-    {/* Central video: object-contain + object-top to avoid cropping */}
-    <video
-      src="/video2.mp4"
-      autoPlay
-      loop
-      muted={muted}
-      key={videoKey}
-      playsInline
-      className={
-        showReflections
-          ? "absolute inset-y-0 left-1/4 w-1/2 h-full object-contain object-top"
-          : "absolute inset-0 w-full h-full object-contain object-top"
-      }
-    />
-
-    {/* Right reflection */}
-    {showReflections && (
+  return (
+    <div className="relative w-full h-full overflow-hidden bg-black">
+      {showReflections && (
+        <video
+          key={`left-${videoKey}`}
+          src="/video3.mp4"
+          autoPlay
+          loop
+          muted
+          playsInline
+          className="absolute inset-y-0 left-0 w-1/4 h-full object-cover transform -scale-x-100 opacity-30 blur-sm"
+        />
+      )}
       <video
-        src="/video3.mp4"
+        key={`main-${videoKey}`}
+        src="/video2.mp4"
         autoPlay
         loop
-        key={videoKey}
-        muted
+        muted={muted}
         playsInline
-        className="absolute inset-y-0 right-0 w-1/4 h-full object-cover opacity-30 blur-sm"
+        className={centerClass}
       />
-    )}
-  </div>
-);
+      {showReflections && (
+        <video
+          key={`right-${videoKey}`}
+          src="/video3.mp4"
+          autoPlay
+          loop
+          muted
+          playsInline
+          className="absolute inset-y-0 right-0 w-1/4 h-full object-cover opacity-30 blur-sm"
+        />
+      )}
+    </div>
+  );
+};
 
 type FormContentsProps = {
   isLoading: boolean;
@@ -85,7 +84,7 @@ const FormContents: React.FC<FormContentsProps> = ({
   handleSubmit,
   onSubmit,
 }) => (
-  <div className="w-full max-w-full sm:max-w-xs md:max-w-md flex flex-col items-center gap-4">
+  <div className="w-full max-w-full sm:max-w-xs md:max-w-md flex flex-col items-start gap-4 pt-6 lg:pt-0">
     <Typography
       variant="h5"
       sx={{
@@ -93,6 +92,7 @@ const FormContents: React.FC<FormContentsProps> = ({
         color: "#111",
         textAlign: "center",
         fontSize: { xs: "1.25rem", sm: "1.5rem", md: "1.75rem" },
+        width: "100%",
       }}
     >
       Regístrate aquí
@@ -105,7 +105,6 @@ const FormContents: React.FC<FormContentsProps> = ({
         {...register("name", { required: "Este campo es requerido" })}
         error={!!errors.name}
         helperText={errors.name?.message}
-        sx={{ "& .MuiInputBase-input": { fontSize: { xs: "0.875rem", sm: "1rem" } } }}
       />
 
       <TextField
@@ -115,7 +114,6 @@ const FormContents: React.FC<FormContentsProps> = ({
         {...register("email", { required: "Este campo es requerido" })}
         error={!!errors.email}
         helperText={errors.email?.message}
-        sx={{ "& .MuiInputBase-input": { fontSize: { xs: "0.875rem", sm: "1rem" } } }}
       />
 
       <ButtonUI
@@ -132,6 +130,7 @@ const FormContents: React.FC<FormContentsProps> = ({
 const LoginView: React.FC = () => {
   const theme = useTheme();
   const isDesktop = useMediaQuery(theme.breakpoints.up("lg"));
+
   const [formOpen, setFormOpen] = useState(false);
   const [isMuted, setIsMuted] = useState(true);
   const [videoKey, setVideoKey] = useState(0);
@@ -144,87 +143,120 @@ const LoginView: React.FC = () => {
   } = useForm<RequestDiagnosis>({ defaultValues: { name: "", email: "" } });
   const [dialogOpen, setDialogOpen] = useState(false);
 
+  const registered = useRegistrationStore((s) => s.registered);
+  const setRegistered = useRegistrationStore((s) => s.setRegistered);
+  const { getSuccess } = useNotification();
+
   useEffect(() => {
-    if (isSuccess) setDialogOpen(true);
-  }, [isSuccess]);
+    if (isSuccess && data) {
+      setRegistered(true);
+      getSuccess("¡Registro exitoso!");
+      setFormOpen(false);
+      setVideoKey((k) => k + 1);
+    }
+  }, [isSuccess, data, setRegistered, getSuccess]);
 
   const onSubmit: SubmitHandler<RequestDiagnosis> = (formData) => {
     mutate(formData);
-    confetti({
-      particleCount: 100,
-      spread: 160,
-      startVelocity: 30,
-      colors: ["#f72585", "#7209b7"],
-    });
-  };
+  }
 
-  const unmute = () => setIsMuted(false);
   const openForm = () => {
-    unmute();
-    setFormOpen(true);
     setIsMuted(false);
-    setVideoKey((k) => k + 1); // fuerza remount de LoopingVideo
     setFormOpen(true);
+    setVideoKey((k) => k + 1);
   };
 
-  // showReflections in desktop or after opening form on mobile
   const showReflections = isDesktop || formOpen;
+  const mobileVideoHeight = formOpen ? "h-[45vh]" : "h-screen";
 
-  return (
-    <div className="relative w-full h-screen overflow-hidden bg-white">
-      {isDesktop ? (
-        <div className="flex w-full h-full">
-          <div className="relative w-3/5 h-full">
-            <LoopingVideo muted={isMuted} showReflections={true} videoKey={videoKey}/>
-          </div>
-          <div className="w-2/5 h-full bg-white flex items-center justify-center px-8">
-            <FormContents
-              isLoading={isLoading}
-              dialogOpen={dialogOpen}
-              data={data}
-              setDialogOpen={setDialogOpen}
-              register={register}
-              errors={errors}
-              handleSubmit={handleSubmit}
-              onSubmit={onSubmit}
-            />
-          </div>
+  const CongratsButton = (
+    <button
+      className="fixed bottom-4 right-4 bg-white p-3 rounded-full shadow-lg text-2xl z-30"
+      onClick={() =>
+        confetti({
+          particleCount: 100,
+          spread: 160,
+          startVelocity: 30,
+          colors: ["#f72585", "#7209b7"],
+        })
+      }
+    >
+      🎉
+    </button>
+  );
+
+  // **Post-registro**: en móvil sin reflejos, en desktop con reflejos.
+  if (registered) {
+    return (
+      <div className="relative w-full h-screen overflow-hidden bg-white">
+        <div className={`relative w-full ${mobileVideoHeight}`}>
+          <LoopingVideo
+            muted={false}
+            showReflections={isDesktop}
+            videoKey={videoKey}
+          />
         </div>
-      ) : (
-        <>
-          {!formOpen && (
-            <div className="relative w-full h-screen">
-              <LoopingVideo muted={isMuted} showReflections={false} videoKey={videoKey}/>
-              <button
-                onClick={openForm}
-                className="absolute top-4 right-4 z-20 bg-white/90 text-black px-4 py-2 rounded-full shadow"
-              >
-                Me interesa 🔥
-              </button>
-            </div>
-          )}
+        {CongratsButton}
+      </div>
+    );
+  }
 
-          {formOpen && (
-            <>
-              <div className="absolute inset-0 w-full h-screen">
-                <LoopingVideo muted={isMuted} showReflections={showReflections} videoKey={videoKey}/>
-              </div>
-              <div className="absolute inset-x-0 bottom-0 bg-white px-4 sm:px-6 md:px-8 h-[55vh] flex items-start p-10 justify-center transition-transform duration-500 ease-out">
-                <FormContents
-                  isLoading={isLoading}
-                  dialogOpen={dialogOpen}
-                  data={data}
-                  setDialogOpen={setDialogOpen}
-                  register={register}
-                  errors={errors}
-                  handleSubmit={handleSubmit}
-                  onSubmit={onSubmit}
-                />
-              </div>
-            </>
-          )}
-        </>
-      )}
+  // **Desktop (antes de registrar)**
+  if (isDesktop) {
+    return (
+      <div className="flex w-full h-screen">
+        <div className="relative w-3/5 h-full">
+          <LoopingVideo muted={isMuted} showReflections={true} videoKey={videoKey} />
+        </div>
+        <div className="w-2/5 h-full bg-white flex items-center justify-center px-8">
+          <FormContents
+            isLoading={isLoading}
+            dialogOpen={dialogOpen}
+            data={data}
+            setDialogOpen={setDialogOpen}
+            register={register}
+            errors={errors}
+            handleSubmit={handleSubmit}
+            onSubmit={onSubmit}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  // **Móvil sin formulario**
+  if (!formOpen) {
+    return (
+      <div className={`relative w-full ${mobileVideoHeight}`}>
+        <LoopingVideo muted={isMuted} showReflections={false} videoKey={videoKey} />
+        <button
+          onClick={openForm}
+          className="absolute top-4 right-4 z-20 bg-white/90 text-black px-4 py-2 rounded-full shadow"
+        >
+          Me interesa 🔥
+        </button>
+      </div>
+    );
+  }
+
+  // **Móvil con formulario abierto**
+  return (
+    <div className="flex flex-col w-full h-screen overflow-hidden bg-white">
+      <div className={`relative w-full ${mobileVideoHeight}`}>
+        <LoopingVideo muted={isMuted} showReflections={showReflections} videoKey={videoKey} />
+      </div>
+      <div className="w-full flex-1 bg-white overflow-auto p-4">
+        <FormContents
+          isLoading={isLoading}
+          dialogOpen={dialogOpen}
+          data={data}
+          setDialogOpen={setDialogOpen}
+          register={register}
+          errors={errors}
+          handleSubmit={handleSubmit}
+          onSubmit={onSubmit}
+        />
+      </div>
     </div>
   );
 };
