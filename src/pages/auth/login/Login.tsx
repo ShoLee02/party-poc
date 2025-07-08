@@ -1,10 +1,11 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { Typography, TextField, useMediaQuery, useTheme } from "@mui/material";
 import { RequestDiagnosis } from "../../../interfaces/auth/auth.interface";
 import { useLogin } from "../../../queries/useAuth";
 import ButtonUI from "../../../common/Button/ButtonUI";
 import DialogMedical from "../../../common/Dialog/Dialog";
+import confetti from 'canvas-confetti';
 
 interface LoopingVideoProps {
   muted: boolean;
@@ -58,7 +59,7 @@ const LoginView: React.FC = () => {
   const [showFormMobile, setShowFormMobile] = useState(false);
   const [isMuted, setIsMuted] = useState(true);
 
-  const { isLoading, mutate, data, isSuccess } = useLogin();
+  const { isLoading, data, isSuccess } = useLogin(); // mutate
   const {
     register,
     handleSubmit,
@@ -73,8 +74,20 @@ const LoginView: React.FC = () => {
   }, [isSuccess]);
 
   const onSubmit = (formData: RequestDiagnosis) => {
-    mutate(formData);
+    console.log(formData);
+    launchConfetti();
+    //mutate(formData);
   };
+
+  const launchConfetti = () => {
+    const confettiSettings = {
+      particleCount: 100,
+      spread: 160,
+      startVelocity: 30,
+      colors: ['#FF5733', '#33FFA8', '#3360FF', '#FF33EA'],
+    };
+    confetti(confettiSettings);
+  }
 
   const unmute = () => setIsMuted(false);
   const handleRegisterClick = () => {
