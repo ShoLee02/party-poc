@@ -16,15 +16,17 @@ import DialogMedical from "../../../common/Dialog/Dialog";
 interface LoopingVideoProps {
   muted: boolean;
   showReflections: boolean;
+  videoKey: number;
 }
 
-const LoopingVideo: React.FC<LoopingVideoProps> = ({ muted, showReflections }) => (
+const LoopingVideo: React.FC<LoopingVideoProps> = ({ muted, showReflections, videoKey }) => (
   <div className="relative w-full h-full overflow-hidden bg-black">
     {/* Left reflection */}
     {showReflections && (
       <video
         src="/video3.mp4"
         autoPlay
+        key={videoKey}
         loop
         muted
         playsInline
@@ -38,6 +40,7 @@ const LoopingVideo: React.FC<LoopingVideoProps> = ({ muted, showReflections }) =
       autoPlay
       loop
       muted={muted}
+      key={videoKey}
       playsInline
       className={
         showReflections
@@ -52,6 +55,7 @@ const LoopingVideo: React.FC<LoopingVideoProps> = ({ muted, showReflections }) =
         src="/video3.mp4"
         autoPlay
         loop
+        key={videoKey}
         muted
         playsInline
         className="absolute inset-y-0 right-0 w-1/4 h-full object-cover opacity-30 blur-sm"
@@ -130,6 +134,7 @@ const LoginView: React.FC = () => {
   const isDesktop = useMediaQuery(theme.breakpoints.up("lg"));
   const [formOpen, setFormOpen] = useState(false);
   const [isMuted, setIsMuted] = useState(true);
+  const [videoKey, setVideoKey] = useState(0);
 
   const { isLoading, mutate, data, isSuccess } = useLogin();
   const {
@@ -157,6 +162,9 @@ const LoginView: React.FC = () => {
   const openForm = () => {
     unmute();
     setFormOpen(true);
+    setIsMuted(false);
+    setVideoKey((k) => k + 1); // fuerza remount de LoopingVideo
+    setFormOpen(true);
   };
 
   // showReflections in desktop or after opening form on mobile
@@ -167,7 +175,7 @@ const LoginView: React.FC = () => {
       {isDesktop ? (
         <div className="flex w-full h-full">
           <div className="relative w-3/5 h-full">
-            <LoopingVideo muted={isMuted} showReflections={true} />
+            <LoopingVideo muted={isMuted} showReflections={true} videoKey={videoKey}/>
           </div>
           <div className="w-2/5 h-full bg-white flex items-center justify-center px-8">
             <FormContents
@@ -186,7 +194,7 @@ const LoginView: React.FC = () => {
         <>
           {!formOpen && (
             <div className="relative w-full h-screen">
-              <LoopingVideo muted={isMuted} showReflections={false} />
+              <LoopingVideo muted={isMuted} showReflections={false} videoKey={videoKey}/>
               <button
                 onClick={openForm}
                 className="absolute top-4 right-4 z-20 bg-white/90 text-black px-4 py-2 rounded-full shadow"
@@ -199,7 +207,7 @@ const LoginView: React.FC = () => {
           {formOpen && (
             <>
               <div className="absolute inset-0 w-full h-screen">
-                <LoopingVideo muted={isMuted} showReflections={showReflections} />
+                <LoopingVideo muted={isMuted} showReflections={showReflections} videoKey={videoKey}/>
               </div>
               <div className="absolute inset-x-0 bottom-0 bg-white px-4 sm:px-6 md:px-8 h-[55vh] flex items-start p-10 justify-center transition-transform duration-500 ease-out">
                 <FormContents
