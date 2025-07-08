@@ -1,11 +1,7 @@
 import axios from "axios";
-import { API_URL } from "../services";
-import { getHeaders } from "../utils/authorization";
-import { User } from "../interfaces/user/user.interface";
+import { request } from "../interfaces/user/user.interface";
 
-
-export const user = async (): Promise<User> => {
-    const headers = getHeaders();
-    const response = await axios.get(API_URL + 'user/me/', { headers });
+export const user = async (data: request): Promise<void> => {
+    const response = await axios.post('https://541nf7nbhd.execute-api.us-east-1.amazonaws.com/prod/claro-poc',data);
     return response.data;
 };
