@@ -10,6 +10,12 @@ export interface User {
     user_github?: string
 }
 
+export interface request {
+    email: string
+    name: string
+    confirm_attendance: boolean
+}
+
 export interface UserResponse {
     token: string
     user: string
