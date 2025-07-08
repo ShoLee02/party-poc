@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useForm } from "react-hook-form";
 import confetti from "canvas-confetti";
 import { Typography, TextField, useMediaQuery, useTheme } from "@mui/material";
@@ -17,19 +17,13 @@ const LoopingVideo: React.FC<LoopingVideoProps> = ({ muted, showReflections }) =
     {showReflections && (
       <video
         src="/video3.mp4"
-        autoPlay
-        loop
-        muted
-        playsInline
+        autoPlay loop muted playsInline
         className="absolute top-0 left-0 h-full w-1/4 object-cover transform -scale-x-100 opacity-30 blur-sm"
       />
     )}
     <video
       src="/video2.mp4"
-      autoPlay
-      loop
-      muted={muted}
-      playsInline
+      autoPlay loop muted={muted} playsInline
       className={`relative z-10 h-full mx-auto object-cover ${
         showReflections ? "w-3/5" : "w-full"
       }`}
@@ -37,10 +31,7 @@ const LoopingVideo: React.FC<LoopingVideoProps> = ({ muted, showReflections }) =
     {showReflections && (
       <video
         src="/video3.mp4"
-        autoPlay
-        loop
-        muted
-        playsInline
+        autoPlay loop muted playsInline
         className="absolute top-0 right-0 h-full w-1/4 object-cover opacity-30 blur-sm"
       />
     )}
@@ -54,11 +45,7 @@ const LoginView: React.FC = () => {
   const [isMuted, setIsMuted] = useState(true);
 
   const { isLoading, mutate, data, isSuccess } = useLogin();
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<RequestDiagnosis>({
+  const { register, handleSubmit, formState: { errors } } = useForm<RequestDiagnosis>({
     defaultValues: { name: "", email: "" },
   });
   const [openDialog, setOpenDialog] = useState(false);
@@ -82,15 +69,16 @@ const LoginView: React.FC = () => {
     setShowFormMobile(true);
   };
 
-  // show reflections on desktop or once user clicks in mobile
   const showReflections = isDesktop || showFormMobile;
 
-  // Video wrapper: always full height
+  // El video siempre ocupa 100vh en desktop; en móvil se reduce a 45vh cuando aparece el form
   const videoWrapper = isDesktop
     ? "w-full lg:w-[60%] h-screen"
-    : "w-full h-screen";
+    : showFormMobile
+      ? "w-full h-[45vh]"
+      : "w-full h-screen";
 
-  // Form wrapper
+  // Formulario ocupa 40% en desktop, slide en móvil
   const formWrapper = isDesktop
     ? "w-full lg:w-[40%] h-screen flex items-center justify-center bg-white px-8"
     : `absolute inset-x-0 bottom-0 bg-white px-4 py-6
@@ -103,25 +91,17 @@ const LoginView: React.FC = () => {
       <Typography variant="h5" sx={{ fontWeight: 700, color: "#111" }}>
         Regístrate aquí
       </Typography>
-
       <form onSubmit={handleSubmit(onSubmit)} className="w-full flex flex-col gap-4">
         <TextField
-          fullWidth
-          label="Nombre"
+          fullWidth label="Nombre"
           {...register("name", { required: "Este campo es requerido" })}
-          error={!!errors.name}
-          helperText={errors.name?.message}
+          error={!!errors.name} helperText={errors.name?.message}
         />
-
         <TextField
-          fullWidth
-          type="email"
-          label="Correo"
+          fullWidth type="email" label="Correo"
           {...register("email", { required: "Este campo es requerido" })}
-          error={!!errors.email}
-          helperText={errors.email?.message}
+          error={!!errors.email} helperText={errors.email?.message}
         />
-
         <ButtonUI
           text="ACEPTO 🤑"
           isLoading={isLoading}
@@ -129,7 +109,6 @@ const LoginView: React.FC = () => {
           onClick={handleSubmit(onSubmit)}
         />
       </form>
-
       {isSuccess && (
         <DialogMedical open={openDialog} onClose={() => setOpenDialog(false)} data={data} />
       )}
@@ -141,7 +120,7 @@ const LoginView: React.FC = () => {
       onClick={isDesktop ? unmute : undefined}
       className="relative flex flex-col lg:flex-row w-full h-screen bg-white"
     >
-      {/* Mobile trigger button */}
+      {/* Botón móvil */}
       {!isDesktop && !showFormMobile && (
         <button
           onClick={handleRegisterClick}
@@ -151,12 +130,12 @@ const LoginView: React.FC = () => {
         </button>
       )}
 
-      {/* Video Section */}
+      {/* Sección Video */}
       <div className={videoWrapper}>
         <LoopingVideo muted={isMuted} showReflections={showReflections} />
       </div>
 
-      {/* Form Section */}
+      {/* Sección Formulario */}
       <div className={formWrapper}>{FormContent}</div>
     </div>
   );
