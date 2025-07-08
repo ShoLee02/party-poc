@@ -201,7 +201,7 @@ const LoginView: React.FC = () => {
               <div className="absolute inset-0 w-full h-screen">
                 <LoopingVideo muted={isMuted} showReflections={showReflections} />
               </div>
-              <div className="absolute inset-x-0 bottom-0 bg-white px-4 sm:px-6 md:px-8 h-[55vh] flex items-center justify-center transition-transform duration-500 ease-out">
+              <div className="absolute inset-x-0 bottom-0 bg-white px-4 sm:px-6 md:px-8 h-[55vh] flex items-start p-10 justify-center transition-transform duration-500 ease-out">
                 <FormContents
                   isLoading={isLoading}
                   dialogOpen={dialogOpen}
