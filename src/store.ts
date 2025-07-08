@@ -38,3 +38,36 @@ export const useAuthStore = create(
     }
   )
 );
+
+interface RegistrationState {
+  registered: boolean;
+  setRegistered: (value: boolean) => void;
+  clearRegistration: () => void;
+}
+
+const localStorageAdap: PersistStorage<RegistrationState> = {
+  getItem: (name) => {
+    const item = localStorage.getItem(name);
+    return item ? JSON.parse(item) : null;
+  },
+  setItem: (name, value) => {
+    localStorage.setItem(name, JSON.stringify(value));
+  },
+  removeItem: (name) => {
+    localStorage.removeItem(name);
+  },
+};
+
+export const useRegistrationStore = create(
+  persist<RegistrationState>(
+    (set) => ({
+      registered: false,
+      setRegistered: (value: boolean) => set(() => ({ registered: value })),
+      clearRegistration: () => set(() => ({ registered: false })),
+    }),
+    {
+      name: 'registration-store',
+      storage: localStorageAdap,
+    }
+  )
+);
